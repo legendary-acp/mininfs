@@ -1,8 +1,11 @@
+use std::{fs, net::TcpListener};
+
 use clap::Parser;
-use std::{
-    io::{BufReader, prelude::*},
-    net::{TcpListener, TcpStream},
-};
+
+mod command;
+mod config;
+mod handler;
+mod utils;
 
 #[derive(Parser, Debug)]
 #[command(name = "miniNFS Server", about = "A minimal file server over TCP")]
@@ -24,25 +27,7 @@ struct Args {
     port: u16,
 }
 
-struct Config {
-    pub _root: String,
-    pub port: u16,
-}
-
-fn handle_connection(stream: TcpStream) {
-    let mut reader = BufReader::new(&stream);
-
-    let mut line = String::new();
-    if let Ok(_) = reader.read_line(&mut line) {
-        let command = line.trim();
-        println!("Received Request for: {:?}", command)
-    } else {
-        eprintln!("Failed to read from stream");
-        return;
-    }
-}
-
-fn start_server(config: Config) {
+fn start_server(config: config::config::Config) {
     let ip = "127.0.0.1";
     let address = format!("{}:{}", ip, config.port);
 
@@ -53,15 +38,20 @@ fn start_server(config: Config) {
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
-        handle_connection(stream)
+        handler::handler::handle_connection(stream, &config.path.clone())
     }
 }
 
 fn main() {
     let args = Args::parse();
-    let config = Config {
-        _root: args.file_path,
-        port: args.port,
-    };
+    let config = config::config::Config::new(args.file_path, args.port);
+    if let Err(e) = fs::create_dir_all(&config.path) {
+        eprintln!(
+            "Failed to create directory {:?}: {}",
+            config.path.display(),
+            e
+        );
+        std::process::exit(1);
+    }
     start_server(config);
 }

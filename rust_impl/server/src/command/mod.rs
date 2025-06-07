@@ -16,6 +16,7 @@ pub enum Command {
     Read(Read),
     Write(Write),
     Append(Append),
+    Quit,
 }
 
 impl Command {
@@ -29,6 +30,7 @@ impl Command {
             Command::Read(cmd) => cmd.exec(writer, base_dir),
             Command::Write(cmd) => cmd.exec(writer, base_dir),
             Command::Append(cmd) => cmd.exec(writer, base_dir),
+            Command::Quit => Ok("Goodbye!".as_bytes().to_vec()),
         }
     }
 }

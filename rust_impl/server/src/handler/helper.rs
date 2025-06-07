@@ -13,7 +13,9 @@ pub fn parse_command(reader: &mut BufReader<&TcpStream>) -> Result<Command, Stri
         return Err(msg);
     }
 
-    if line.starts_with("LIST") {
+    if line.eq_ignore_ascii_case("QUIT\n") || line.len() == 0 {
+        return Ok(Command::Quit);
+    } else if line.starts_with("LIST") {
         Ok(Command::List(List::new()))
     } else if let Some(rest) = line.strip_prefix("READ ") {
         let filename = rest.trim().to_string();

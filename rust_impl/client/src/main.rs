@@ -27,7 +27,7 @@ fn main() {
             continue;
         }
         let mut cmd = String::new();
-        if input.starts_with("WRITE ") {
+        if input.starts_with("WRITE ") || input.starts_with("APPEND ") {
             cmd.push_str(input);
             cmd.push('\n');
             println!("Enter file cotents (type <EOF> on a new line to finish):");
@@ -38,7 +38,7 @@ fn main() {
                     .expect("Failed to read input");
 
                 if data_line.trim() == "<EOF>" {
-                    cmd.push_str("<EOF>\n");
+                    cmd.push_str("<EOF>");
                     break;
                 } else {
                     cmd.push_str(&data_line);

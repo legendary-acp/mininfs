@@ -1,58 +1,32 @@
 use crate::command::append::Append;
 use crate::command::{Command, list::List, read::Read, write::Write};
-
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
 pub fn parse_command(reader: &mut BufReader<&TcpStream>) -> Result<Command, String> {
     let mut line = String::new();
+    reader
+        .read_line(&mut line)
+        .map_err(|err| format!("Failed to read from stream: {}\n", err))?;
 
-    // Read the first line: expected to be the command
-    if let Err(err) = reader.read_line(&mut line) {
-        let msg = format!("Failed to read from stream: {}\n", err);
-        return Err(msg);
-    }
+    let command_line = line.trim();
 
-    if line.eq_ignore_ascii_case("QUIT\n") || line.len() == 0 {
+    if command_line.eq_ignore_ascii_case("QUIT") || command_line.is_empty() {
+        println!("Command Received: QUIT");
         return Ok(Command::Quit);
-    } else if line.starts_with("LIST") {
+    } else if command_line.starts_with("LIST") {
+        println!("Command Received: LIST");
         Ok(Command::List(List::new()))
-    } else if let Some(rest) = line.strip_prefix("READ ") {
-        let filename = rest.trim().to_string();
-        Ok(Command::Read(Read::new(filename)))
-    } else if let Some(rest) = line.strip_prefix("WRITE ") {
-        let filename = rest.trim();
-        let mut buffer = Vec::new();
-
-        loop {
-            let mut content_line = String::new();
-            reader
-                .read_line(&mut content_line)
-                .map_err(|e| e.to_string())?;
-            if content_line.trim_end() == "<EOF>" {
-                break;
-            }
-            buffer.extend_from_slice(content_line.as_bytes());
-        }
-
-        Ok(Command::Write(Write::new(filename.to_string(), buffer)))
-    } else if let Some(rest) = line.strip_prefix("APPEND ") {
-        let filename = rest.trim();
-        let mut buffer = Vec::new();
-
-        loop {
-            let mut content_line = String::new();
-            reader
-                .read_line(&mut content_line)
-                .map_err(|e| e.to_string())?;
-            if content_line.trim_end() == "<EOF>" {
-                break;
-            }
-            buffer.extend_from_slice(content_line.as_bytes());
-        }
-
-        Ok(Command::Append(Append::new(filename.to_string(), buffer)))
+    } else if let Some(rest) = command_line.strip_prefix("READ ") {
+        println!("Command Received: READ");
+        Ok(Command::Read(Read::new(rest.trim().to_string())))
+    } else if let Some(rest) = command_line.strip_prefix("WRITE ") {
+        println!("Command Received: WRITE");
+        Ok(Command::Write(Write::new(rest.trim().to_string())))
+    } else if let Some(rest) = command_line.strip_prefix("APPEND ") {
+        println!("Command Received: APPEND");
+        Ok(Command::Append(Append::new(rest.trim().to_string())))
     } else {
-        Err(format!("Invalid command: {}", line))
+        Err(format!("Invalid command: {}", command_line))
     }
 }

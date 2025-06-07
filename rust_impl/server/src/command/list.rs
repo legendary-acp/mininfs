@@ -1,4 +1,8 @@
-use std::fs;
+use std::{
+    fs,
+    io::{BufReader, BufWriter},
+    net::TcpStream,
+};
 
 use crate::utils::{write_error, write_ok};
 
@@ -9,7 +13,8 @@ pub struct List;
 impl Executable for List {
     fn exec(
         &self,
-        writer: &mut std::io::BufWriter<&std::net::TcpStream>,
+        _reader: &mut BufReader<&TcpStream>,
+        writer: &mut BufWriter<&TcpStream>,
         base_dir: &std::path::Path,
     ) -> Result<Vec<u8>, String> {
         let entries = match fs::read_dir(base_dir) {

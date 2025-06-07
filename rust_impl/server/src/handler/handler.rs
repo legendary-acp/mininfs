@@ -21,7 +21,7 @@ pub fn handle_connection(stream: TcpStream, base_dir: &PathBuf) {
                 break;
             }
             Ok(cmd) => {
-                if let Err(err) = cmd.exec(&mut writer, base_dir) {
+                if let Err(err) = cmd.exec(&mut reader, &mut writer, base_dir) {
                     eprintln!("{}", err.trim_end());
                 }
             }

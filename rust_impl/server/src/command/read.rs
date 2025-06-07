@@ -1,4 +1,8 @@
-use std::fs;
+use std::{
+    fs,
+    io::{BufReader, BufWriter},
+    net::TcpStream,
+};
 
 use crate::utils::{write_error, write_ok};
 
@@ -11,12 +15,12 @@ pub struct Read {
 impl Executable for Read {
     fn exec(
         &self,
-        writer: &mut std::io::BufWriter<&std::net::TcpStream>,
+        _reader: &mut BufReader<&TcpStream>,
+        writer: &mut BufWriter<&TcpStream>,
         base_dir: &std::path::Path,
     ) -> Result<Vec<u8>, String> {
         let complete_path = base_dir.join(&self.filename);
 
-        println!("{:?}", complete_path);
         let _ = match fs::read(complete_path) {
             Ok(c) => {
                 write_ok(writer, &c);

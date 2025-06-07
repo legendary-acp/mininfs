@@ -3,7 +3,11 @@ pub mod list;
 pub mod read;
 pub mod traits;
 pub mod write;
-use std::{io::BufWriter, net::TcpStream, path::Path};
+use std::{
+    io::{BufReader, BufWriter},
+    net::TcpStream,
+    path::Path,
+};
 
 use append::Append;
 use list::List;
@@ -22,14 +26,15 @@ pub enum Command {
 impl Command {
     pub fn exec(
         &self,
+        reader: &mut BufReader<&TcpStream>,
         writer: &mut BufWriter<&TcpStream>,
         base_dir: &Path,
     ) -> Result<Vec<u8>, String> {
         match self {
-            Command::List(cmd) => cmd.exec(writer, base_dir),
-            Command::Read(cmd) => cmd.exec(writer, base_dir),
-            Command::Write(cmd) => cmd.exec(writer, base_dir),
-            Command::Append(cmd) => cmd.exec(writer, base_dir),
+            Command::List(cmd) => cmd.exec(reader, writer, base_dir),
+            Command::Read(cmd) => cmd.exec(reader, writer, base_dir),
+            Command::Write(cmd) => cmd.exec(reader, writer, base_dir),
+            Command::Append(cmd) => cmd.exec(reader, writer, base_dir),
             Command::Quit => Ok("Goodbye!".as_bytes().to_vec()),
         }
     }
